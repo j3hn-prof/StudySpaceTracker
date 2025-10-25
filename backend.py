@@ -1,5 +1,7 @@
 import pandas as pd
 
+# import ./
+
 class user:
    location = [0,0]
    def __init__(self, location):
@@ -15,4 +17,5 @@ def getRankedList(dataBase, user):
     return lc
   
 def getWeightedAverageForDBIndex(dataBase, user):
-
+   # complete this and return a float from 0-1
+   
