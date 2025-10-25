@@ -1,6 +1,6 @@
-Name,Max Capacity,Current Capacity,User Rating,Number of Ratings
-CGS,100,50,4.3,1000
-CDS,300,161,4.5,4781
-Kilachand,50,14,4.6,599
-Mugar,500,267,4.5,9802
-Warren Towers,10,8,4.0,803
+Name,Max Capacity,Current Capacity,User Rating,Number of Ratings,Latitude,Longitude
+CGS,100,50,4.3,1000,42.3514,-71.1146
+CDS,300,161,4.5,4781,42.3503,-71.1048
+Kilachand,50,14,4.6,599,42.3503,-71.0970
+Mugar,500,267,4.5,9802,42.3510,-71.1080
+Warren Towers,10,8,4.0,803,42.3490,-71.1035

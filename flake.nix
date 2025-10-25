@@ -12,6 +12,7 @@ description = "Nix devshells!";
     devShells.${system}.default = pkgs.mkShell {
       buildInputs = with pkgs; [
         python3Packages.pandas
+        python3Packages.flask
         python3
       ];
     };
