@@ -1,4 +1,5 @@
 import pandas as pd
+from os import path
 
 class user:
    location = [0,0]
