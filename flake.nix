@@ -13,6 +13,7 @@ description = "Nix devshells!";
       buildInputs = with pkgs; [
         python3Packages.pandas
         python3Packages.flask
+        python3Packages.flask-cors
         python3
         jq
         nodejs

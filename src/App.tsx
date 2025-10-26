@@ -7,7 +7,6 @@ interface StudySpot {
   name: string;
   type: string;
   rating: number;
-  noise: string;
   amenities: string[];
   hours: string;
   description: string;
@@ -17,82 +16,79 @@ interface StudySpot {
 
 const App = () => {
   const studySpots: StudySpot[] = [
-    {
-      id: 1,
-      name: "Mugar Memorial Library",
-      type: "Library",
-      rating: 4.5,
-      noise: "quiet",
-      amenities: ["WiFi", "Power Outlets", "Printing", "24/7"],
-      hours: "24/7 during semester",
-      description: "Main library with multiple floors offering various study environments from silent study to collaborative spaces.",
-      x: 30,
-      y: 45
-    },
-    {
-      id: 2,
-      name: "GSU Study Lounge",
-      type: "Student Center",
-      rating: 4.2,
-      noise: "moderate",
-      amenities: ["WiFi", "Power Outlets", "Food Nearby", "Collaborative"],
-      hours: "7am - 2am",
-      description: "Popular student center with comfortable seating and group study areas. Great for collaborative work.",
-      x: 50,
-      y: 55
-    },
-    {
-      id: 3,
-      name: "Stokes Hall Reading Room",
-      type: "Academic Building",
-      rating: 4.7,
-      noise: "quiet",
-      amenities: ["WiFi", "Power Outlets", "Beautiful Architecture"],
-      hours: "8am - 10pm",
-      description: "Stunning reading room with high ceilings and natural light. Perfect for focused individual study.",
-      x: 65,
-      y: 35
-    },
-    {
-      id: 4,
-      name: "CDS Collaborative Space",
-      type: "Academic Building",
-      rating: 4.0,
-      noise: "loud",
-      amenities: ["WiFi", "Power Outlets", "Whiteboards", "Collaborative"],
-      hours: "8am - 11pm",
-      description: "Open collaborative space designed for group projects and discussion. Whiteboards available.",
-      x: 45,
-      y: 65
-    },
-    {
-      id: 5,
-      name: "Pardee Library",
-      type: "Library",
-      rating: 4.6,
-      noise: "quiet",
-      amenities: ["WiFi", "Power Outlets", "Printing", "Reserved Rooms"],
-      hours: "8am - 12am",
-      description: "Peaceful library atmosphere with individual study carrels and reservable group study rooms.",
-      x: 70,
-      y: 50
-    },
-    {
-      id: 6,
-      name: "BU Beach",
-      type: "Outdoor",
-      rating: 3.8,
-      noise: "moderate",
-      amenities: ["WiFi", "Outdoor Seating", "Scenic"],
-      hours: "Always Open",
-      description: "Outdoor lawn area perfect for studying on nice days. Relaxed atmosphere by the Charles River.",
-      x: 25,
-      y: 30
-    }
-  ];
+  {
+    id: 1,
+    name: "Mugar",
+    type: "Library",
+    rating: 4.5,
+    numberOfRatings: 9802,
+    maxCapacity: 500,
+    currentCapacity: 267,
+    amenities: ["WiFi", "Power Outlets", "Printing", "24/7"],
+    hours: "24/7 during semester",
+    description: "Main library with multiple floors offering various study environments from silent study to collaborative spaces.",
+    latitude: 42.3510,
+    longitude: -71.1080
+  },
+  {
+    id: 2,
+    name: "CDS",
+    type: "Academic Building",
+    rating: 4.5,
+    numberOfRatings: 4781,
+    maxCapacity: 300,
+    currentCapacity: 161,
+    amenities: ["WiFi", "Power Outlets", "Whiteboards", "Collaborative"],
+    hours: "8am - 11pm",
+    description: "Open collaborative space designed for group projects and discussion. Whiteboards available.",
+    latitude: 42.3503,
+    longitude: -71.1048
+  },
+  {
+    id: 3,
+    name: "Kilachand",
+    type: "Academic Building",
+    rating: 4.6,
+    numberOfRatings: 599,
+    maxCapacity: 50,
+    currentCapacity: 14,
+    amenities: ["WiFi", "Power Outlets", "Beautiful Architecture"],
+    hours: "8am - 10pm",
+    description: "Stunning reading room with high ceilings and natural light. Perfect for focused individual study.",
+    latitude: 42.3503,
+    longitude: -71.0970
+  },
+  {
+    id: 4,
+    name: "CGS",
+    type: "Student Center",
+    rating: 4.3,
+    numberOfRatings: 1000,
+    maxCapacity: 100,
+    currentCapacity: 50,
+    amenities: ["WiFi", "Power Outlets", "Food Nearby", "Collaborative"],
+    hours: "7am - 2am",
+    description: "Popular student center with comfortable seating and group study areas. Great for collaborative work.",
+    latitude: 42.3514,
+    longitude: -71.1146
+  },
+  {
+    id: 5,
+    name: "Warren Towers",
+    type: "Residence",
+    rating: 4.0,
+    numberOfRatings: 803,
+    maxCapacity: 10,
+    currentCapacity: 8,
+    amenities: ["WiFi", "Power Outlets", "Reserved Rooms"],
+    hours: "8am - 12am",
+    description: "Peaceful library atmosphere with individual study carrels and reservable group study rooms.",
+    latitude: 42.3490,
+    longitude: -71.1035
+  }
+];
 
   const [selectedSpot, setSelectedSpot] = useState<StudySpot | null>(null);
-  const [noiseFilter, setNoiseFilter] = useState<string>("all");
   const [amenityFilter, setAmenityFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   
@@ -133,32 +129,13 @@ const App = () => {
     }
   };
 
-  const getNoiseIcon = (noise: string) => {
-    switch (noise.toLowerCase()) {
-      case "quiet": return <VolumeX className="w-4 h-4" />;
-      case "moderate": return <Volume1 className="w-4 h-4" />;
-      case "loud": return <Volume2 className="w-4 h-4" />;
-      default: return null;
-    }
-  };
-
-  const getNoiseColor = (noise: string) => {
-    switch (noise) {
-      case "quiet": return "text-green-600";
-      case "moderate": return "text-yellow-600";
-      case "loud": return "text-orange-600";
-      default: return "";
-    }
-  };
-
   const filteredSpots = studySpots.filter(spot => {
-    const matchesNoise = noiseFilter === "all" || spot.noise === noiseFilter;
     const matchesAmenity = amenityFilter === "all" || spot.amenities.some(a =>
       a.toLowerCase().includes(amenityFilter.toLowerCase())
     );
     const matchesSearch = spot.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       spot.type.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesNoise && matchesAmenity && matchesSearch;
+    return matchesAmenity && matchesSearch;
   });
 
   return (
@@ -186,38 +163,6 @@ const App = () => {
               />
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-red-900 mb-2">Noise Level</label>
-              <select
-                value={noiseFilter}
-                onChange={(e) => setNoiseFilter(e.target.value)}
-                className="w-full px-4 py-2 border-2 border-red-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-800"
-              >
-                <option value="all">All Levels</option>
-                <option value="quiet">Quiet</option>
-                <option value="moderate">Moderate</option>
-                <option value="loud">Loud/Collaborative</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-red-900 mb-2">Amenities</label>
-              <select
-                value={amenityFilter}
-                onChange={(e) => setAmenityFilter(e.target.value)}
-                className="w-full px-4 py-2 border-2 border-red-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-800"
-              >
-                <option value="all">All Amenities</option>
-                <option value="wifi">WiFi</option>
-                <option value="power">Power Outlets</option>
-                <option value="printing">Printing</option>
-                <option value="24/7">24/7 Access</option>
-                <option value="collaborative">Collaborative</option>
-              </select>
-            </div>
-          </div>
         </div>
 
         {/* Main Content (Map + Details) */}
@@ -243,10 +188,6 @@ const App = () => {
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
                     <span className="text-sm font-semibold">{spot.rating}</span>
-                  </div>
-                  <div className={`flex items-center gap-1 ${getNoiseColor(spot.noise)}`}>
-                    {getNoiseIcon(spot.noise)}
-                    <span className="text-xs capitalize">{spot.noise}</span>
                   </div>
                 </div>
               </button>
