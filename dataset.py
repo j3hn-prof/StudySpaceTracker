@@ -1,5 +1,5 @@
 import pandas as pd
-df= pd.read_csv("coffee_shop_revenue.csv")
+df= pd.read_csv("coffee_shops.csv")
 
 df= df.dropna()
 df.columns = [

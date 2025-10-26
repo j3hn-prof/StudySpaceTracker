@@ -1,62 +1,140 @@
 from flask import Flask, jsonify, request
-from flask_cors import CORS
 import pandas as pd
 import math
 
 app = Flask(__name__)
-CORS(app)  # Allow frontend requests
-
 df = pd.read_csv("./study_spots.csv")  # CSV with Latitude and Longitude
 
-class User:
+dfcoffee = pd.read_csv("./coffee_shops.csv")
+
+class user:
     def __init__(self, location):
         self.location = location
 
 
+def getWeightedAverageForCoffee(dfcoffee):
+    CGS = 0
+    CDS= 0
+    Kil = 0
+    Mugar =0
+    Warren =0 
+
+    def findScore(row):
+        #calculate scores for all entries in dfcoffee
+        #assign scores at the end to one of the 5 places
+
+        #weighted score
+
+        score = (0.25 * row["Number of Customers Per Day"]
+            + 0.20 * row["Average Order Value"]
+            + 0.20 * row["Location Foot Traffic"]
+            + 0.20 * row["Daily Revenue"]
+            - 0.10 * row["Marketing Spend Per Day"]
+            - 0.05 * row["Number of Employees"])
+        return score
+    
+    #for every row in dfcoffee:
+    #i starts at 1 and you need the +1 so that it goes up to the last row in the csv file
+    #you need .iloc [i=1 because .iloc starts at 0
+    for i in range(1, len(dfcoffee)+1 ):
+        row = dfcoffee.iloc[i-1]
+        score = findScore(row)
+
+        numberC = (i-1) % 5 #goes from 0 to 4
+        if numberC == 0:
+            CGS += score
+        elif numberC == 1:
+            CDS += score
+        elif numberC == 2:
+            Kil += score
+        elif numberC == 3:
+            Mugar += score
+        else:
+            Warren += score
+
+    scoresList = [CGS, CDS, Kil, Mugar, Warren]
+
+    #normalizing helper function so that all numbers are in between 0 and 1
+    def normalizeCoffee(scoresList):
+        min1 = min(scoresList)
+        max1 = max(scoresList)
+        normalized = []
+        for number in scoresList:
+            if max1 == min1:
+                #if all numbers are the same
+                normalized.append(0.5)
+            else:
+                normalized.append((number - min1) / (max1 - min1))
+        return normalized
+    
+    normScoresList = normalizeCoffee(scoresList)
+
+    #print out in nicer format
+    places = ["CGS", "CDS", "Kilachand", "Mugar", "Warren"]
+    for name, score in zip(places, normScoresList):
+        print(f"{name}: {round(score, 3)}")
+    
+    return normScoresList
+
+        
+
+#get scores 0-1 for each place in the dataframe
 def getWeightedAverageForDBIndex(df, user):
+    
     def findDistance(latStart, lonStart, latEnd, lonEnd):
         distX = latEnd - latStart
         distY = lonEnd - lonStart
         distMiles = ((distX**2 + distY**2) ** 0.5) * 69
         return distMiles
+    #pythagorean theorem
+    #one /degree of latitude and longitude is approximately 69 miles
 
     latUser, lonUser = user.location
-
-    distances = []
+    
+    distances= []
     for _, row in df.iterrows():
-        distance = findDistance(latUser, lonUser, row["Latitude"], row["Longitude"])
+        distance= findDistance(latUser,lonUser,row["Latitude"], row["Longitude"])
         distances.append(distance)
-    distances = pd.Series(distances, index=df.index)
+    distances= pd.Series(distances, index= df.index)
 
+    #normalizing helper function so that larger numbers don't dominate smaller ones
     def normalize(series):
-        min_val = series.min()
-        max_val = series.max()
-        if min_val == max_val:
-            return pd.Series([0.5] * len(series), index=series.index)
-        return (series - min_val) / (max_val - min_val)
+        min = series.min()
+        max = series.max()
+        if min == max:
+            return pd.Series([0.5] * len(series), index= series.index)
+        return (series - min)/(max - min)
+    #what the pd.Series is
 
-    rating = df["User Rating"]
+
+    #normalize features before weighting
+    rating= df["User Rating"]
     ratingNormal = normalize(rating)
 
-    numRatings = df["Number of Ratings"]
-    numRatingsNormal = normalize(numRatings)
+    numRatings= df["Number of Ratings"]
+    numRatingsNormal= normalize(numRatings)
 
     crowdedness = df["Current Capacity"] / df["Max Capacity"]
-    crowdNormal = 1 - normalize(crowdedness)
+    crowdNormal = 1- normalize(crowdedness)
+    #because the lower crowdNormal is the better (want less crowds)
 
-    alpha = 3.0
+    #calculate weight of rating combined with number of ratings(popularity)
+    alpha= 3.0 #controls rate of increase of the curve 1-E^-X
     xParameter = alpha * numRatingsNormal
     popularity = [1 - math.exp(-x) for x in xParameter]
     popularity = pd.Series(popularity, index=numRatings.index)
 
     ratingNew = ratingNormal * popularity
 
-    thresholdMiles = 50.0
-    scale = 12.0
+    #calculate weight of location using graph of e^-x
+    thresholdMiles = 50.0 #about 2 hours
+    scale = 12.0 #how fast a longer distance decreases score
+    # 12 is used because it is a moderate value
 
-    xDist = [dist / scale for dist in distances]
+    xDist= [dist/scale for dist in distances]
     locationCurve = [math.exp(-x) for x in xDist]
 
+    #0 if distance > 50.0, too far away
     locationAdjusted = []
     for i in range(len(distances)):
         if distances.iloc[i] <= thresholdMiles:
@@ -65,10 +143,13 @@ def getWeightedAverageForDBIndex(df, user):
             locationAdjusted.append(0.0)
     locationCurve = pd.Series(locationAdjusted, index=df.index)
 
-    ratingWeight = 0.45 + (0.15 * numRatingsNormal)
+    #baseline of weights
+    ratingWeight= 0.45 + (0.15 *numRatingsNormal)
     crowdWeight = 0.30
     locationWeight = 0.25
 
+
+    #normalize weights to have sum=1
     finalRatingWeight = []
     finalCrowdWeight = []
     finalLocationWeight = []
@@ -81,6 +162,7 @@ def getWeightedAverageForDBIndex(df, user):
     finalCrowdWeight = pd.Series(finalCrowdWeight, index=df.index)
     finalLocationWeight = pd.Series(finalLocationWeight, index=df.index)
 
+    #output scores now
     scores = []
     for i in df.index:
         r = ratingNew.loc[i]
@@ -94,28 +176,34 @@ def getWeightedAverageForDBIndex(df, user):
 
 
 def getRankedList(df, user):
-    scores = getWeightedAverageForDBIndex(df, user)
-    ranked_list = []
-    for i in range(len(df)):
-        place_data = df.iloc[i].to_dict()  # ✅ convert to dict
-        score = float(scores[i])
-        ranked_list.append([place_data, score])
-
-    ranked_list.sort(reverse=True, key=lambda x: x[1])
-    return ranked_list
+     scores = getWeightedAverageForDBIndex(df, user)
+     ranked_list = []
+     for i in range(len(df)):
+        placeName = df.iloc[i]["Name"]
+        score = scores[i]
+        ranked_list.append([placeName, score])
+    
+     ranked_list.sort(reverse=True, key=lambda x: x[1])
+        
+     for item in ranked_list:
+        name = item[0]
+        score = item[1]
+        print(f"{name}: {score:.3f}")
+        
+     return ranked_list
 
 
 @app.route("/ranked", methods=["GET"])
 def ranked_endpoint():
+    # Accept latitude & longitude as query params: ?lat=...&lon=...
     lat = request.args.get("lat", type=float)
     lon = request.args.get("lon", type=float)
     if lat is None or lon is None:
         return jsonify({"error": "Please provide lat and lon query parameters, e.g. /ranked?lat=42.35&lon=-71.11"}), 400
 
-    u = User((lat, lon))
+    u = user((lat, lon))
     ranked = getRankedList(df, u)
-    return jsonify(ranked)  # ✅ now JSON serializable
-
+    return jsonify(ranked)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    app.run(host="0.0.0.0", port=8000)
