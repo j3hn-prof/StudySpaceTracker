@@ -110,7 +110,7 @@ def getRankedList(df, user):
      scores = getWeightedAverageForDBIndex(df, user)
      ranked_list = []
      for i in range(len(df)):
-        placeName = df.iloc[i]["Name"]
+        placeName = df.iloc[i]
         score = scores[i]
         ranked_list.append([placeName, score])
     

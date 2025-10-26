@@ -14,6 +14,10 @@ description = "Nix devshells!";
         python3Packages.pandas
         python3Packages.flask
         python3
+        jq
+        nodejs
+        http-server
+        live-server
       ];
     };
   };
